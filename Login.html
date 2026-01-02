@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CCTNS Login</title>
+  <style>
+    :root {
+      --primary: #0d6efd;
+      --primary-hover: #0b5ed7;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --error: #ef4444;
+      --success: #16a34a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #f8fafc);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+    }
+    .login-card {
+      width: 360px;
+      max-width: 92vw;
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.08);
+      padding: 28px 26px;
+      animation: floatIn 300ms ease-out;
+    }
+    @keyframes floatIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .brand .logo {
+      width: 36px; height: 36px; border-radius: 9px; background: var(--primary);
+      display: grid; place-items: center; color: white; font-weight: 700;
+    }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p.subtitle { margin: 0 0 18px; color: var(--muted); font-size: 0.95rem; }
+
+    label { font-weight: 600; font-size: 0.9rem; display: block; margin: 12px 0 6px; }
+    .field {
+      display: flex; align-items: center; gap: 8px;
+      border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px;
+      background: #fafafa;
+    }
+    .field input {
+      border: none; outline: none; flex: 1; background: transparent; font-size: 0.98rem;
+    }
+    .toggle {
+      cursor: pointer; color: var(--muted); font-size: 0.9rem; user-select: none;
+    }
+    .actions { margin-top: 16px; }
+    button {
+      width: 100%; padding: 12px 14px; border: none; border-radius: 10px;
+      background: var(--primary); color: white; font-weight: 700; font-size: 1rem;
+      cursor: pointer; box-shadow: 0 8px 16px rgba(13,110,253,0.25);
+    }
+    button:hover { background: var(--primary-hover); }
+    .helper {
+      display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+      color: var(--muted); font-size: 0.9rem;
+    }
+    .msg { margin-top: 10px; font-size: 0.92rem; }
+    .msg.error { color: var(--error); }
+    .msg.success { color: var(--success); }
+    .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.85rem; text-align: center; }
+    .footer-note code { background: #f1f5f9; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <main class="login-card">
+    <div class="brand">
+      <div class="logo">PR</div>
+      <div>
+        <h1>ProstarM Secure Login</h1>
+        <p class="subtitle">Sign in to continue</p>
+      </div>
+    </div>
+
+    <form id="loginForm" autocomplete="off" novalidate>
+      <label for="userId">User ID</label>
+      <div class="field">
+        <input type="text" id="userId" name="userId" placeholder="Enter User ID" required />
+      </div>
+
+      <label for="password">Password</label>
+      <div class="field">
+        <input type="password" id="password" name="password" placeholder="Enter Password" required />
+        <span class="toggle" id="togglePwd">Show</span>
+      </div>
+
+      <div class="actions">
+        <button type="submit" id="loginBtn">Login</button>
+      </div>
+      <div id="message" class="msg" aria-live="polite"></div>
+
+      <div class="helper">
+        <span>Need access?</span>
+        #Contact Admin</a>
+      </div>
+
+    </form>
+  </main>
+
+  <script>
+    // Constants — hardcoded demo credentials
+    const DEMO_USER = "CCTNS";
+    const DEMO_PASS = "cctns@1234";
+
+    const form = document.getElementById("loginForm");
+    const messageEl = document.getElementById("message");
+    const userIdEl = document.getElementById("userId");
+    const passwordEl = document.getElementById("password");
+    const togglePwdEl = document.getElementById("togglePwd");
+
+    // Show/Hide password
+    togglePwdEl.addEventListener("click", () => {
+      const isPassword = passwordEl.type === "password";
+      passwordEl.type = isPassword ? "text" : "password";
+      togglePwdEl.textContent = isPassword ? "Hide" : "Show";
+    });
+
+    // Handle login
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const user = (userIdEl.value || "").trim();
+      const pass = passwordEl.value || "";
+
+      // Basic validation
+      if (!user || !pass) {
+        showMessage("Please fill in both User ID and Password.", "error");
+        return;
+      }
+
+      // Check demo credentials
+      if (user === DEMO_USER && pass === DEMO_PASS) {
+        showMessage("Login successful. Redirecting...", "success");
+
+        // Set a simple client-side session flag
+        sessionStorage.setItem("loggedIn", "true");
+        sessionStorage.setItem("username", user);
+
+        // Redirect after a short delay
+        setTimeout(() => {
+          window.location.href = "CCTNS.html";
+        }, 600);
+      } else {
+        showMessage("Invalid credentials. Please try again.", "error");
+      }
+    });
+
+    function showMessage(text, type) {
+      messageEl.textContent = text;
+      messageEl.className = `msg ${type}`;
+    }
+  </script>
+</body>
