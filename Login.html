@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CCTNS Login</title>
-  
-  <link rel="icon" type="image/png" href="Prostarm logo.png">
+  <title>System Login</title>
   
   <style>
     :root {
@@ -41,14 +39,21 @@
       from { transform: translateY(8px); opacity: 0; }
       to   { transform: translateY(0); opacity: 1; }
     }
+    
+    /* Updated Brand Layout for the Image */
     .brand {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      text-align: center; 
+      margin-bottom: 16px;
     }
-    .brand .logo {
-      width: 36px; height: 36px; border-radius: 9px; background: var(--primary);
-      display: grid; place-items: center; color: white; font-weight: 700;
+    .main-logo {
+      width: 220px; /* Sized perfectly for the card */
+      height: auto;
+      margin-bottom: 16px;
     }
-    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    h1 { font-size: 1.25rem; margin: 0 0 4px; }
     p.subtitle { margin: 0 0 18px; color: var(--muted); font-size: 0.95rem; }
 
     label { font-weight: 600; font-size: 0.9rem; display: block; margin: 12px 0 6px; }
@@ -64,68 +69,72 @@
       cursor: pointer; color: var(--muted); font-size: 0.9rem; user-select: none;
     }
     .actions { margin-top: 16px; }
-    button {
+    button.btn-primary {
       width: 100%; padding: 12px 14px; border: none; border-radius: 10px;
       background: var(--primary); color: white; font-weight: 700; font-size: 1rem;
       cursor: pointer; box-shadow: 0 8px 16px rgba(13,110,253,0.25);
     }
-    button:hover { background: var(--primary-hover); }
-    .helper {
-      display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
-      color: var(--muted); font-size: 0.9rem;
+    button.btn-primary:hover { background: var(--primary-hover); }
+    
+    /* Selection Screen Styles */
+    #selectionSection { display: none; text-align: center; }
+    .app-btn {
+      width: 100%; padding: 16px; margin-bottom: 12px; border: 2px solid #e5e7eb;
+      border-radius: 10px; background: transparent; color: var(--text);
+      font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
     }
-    /* Added minimal styling for the helper link */
-    .helper a {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
+    .app-btn:hover {
+      border-color: var(--primary); background: #eff6ff; color: var(--primary);
     }
-    .helper a:hover {
-      text-decoration: underline;
-    }
-    .msg { margin-top: 10px; font-size: 0.92rem; }
+
+    .helper { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; color: var(--muted); font-size: 0.9rem; }
+    .helper a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .helper a:hover { text-decoration: underline; }
+    .msg { margin-top: 10px; font-size: 0.92rem; text-align: center; }
     .msg.error { color: var(--error); }
     .msg.success { color: var(--success); }
-    .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.85rem; text-align: center; }
-    .footer-note code { background: #f1f5f9; padding: 2px 6px; border-radius: 6px; }
   </style>
 </head>
 <body>
   <main class="login-card">
     <div class="brand">
-      <div class="logo">PR</div>
-      <div>
-        <h1>ProstarM Secure Login</h1>
-        <p class="subtitle">Sign in to continue</p>
-      </div>
+      <!-- Integrated the provided logo here -->
+      <img src="Prostarm-logo.png" alt="ProstarM Logo" class="main-logo" onerror="this.style.display='none'">
+      <h1>ProstarM Portal</h1>
+      <p class="subtitle" id="formSubtitle">Sign in to continue</p>
     </div>
 
-    <form id="loginForm" autocomplete="off" novalidate>
-      <label for="userId">User ID</label>
-      <div class="field">
-        <input type="text" id="userId" name="userId" placeholder="Enter User ID" required />
-      </div>
+    <!-- Login Form -->
+    <div id="loginSection">
+      <form id="loginForm" autocomplete="off" novalidate>
+        <label for="userId">User ID</label>
+        <div class="field">
+          <input type="text" id="userId" name="userId" placeholder="Enter User ID" required />
+        </div>
 
-      <label for="password">Password</label>
-      <div class="field">
-        <input type="password" id="password" name="password" placeholder="Enter Password" required />
-        <span class="toggle" id="togglePwd">Show</span>
-      </div>
+        <label for="password">Password</label>
+        <div class="field">
+          <input type="password" id="password" name="password" placeholder="Enter Password" required />
+          <span class="toggle" id="togglePwd">Show</span>
+        </div>
 
-      <div class="actions">
-        <button type="submit" id="loginBtn">Login</button>
-      </div>
-      <div id="message" class="msg" aria-live="polite"></div>
+        <div class="actions">
+          <button type="submit" id="loginBtn" class="btn-primary">Login</button>
+        </div>
+        <div id="message" class="msg" aria-live="polite"></div>
+      </form>
+    </div>
 
-      <div class="helper">
-        <span>Need access?</span>
-        <a href="#">Contact Admin</a>
-      </div>
-    </form>
+    <!-- Application Selection Screen -->
+    <div id="selectionSection">
+      <h3 style="margin-top: 0; margin-bottom: 20px;">Select Application</h3>
+      <button class="app-btn" onclick="window.location.href='CCTNS.html'">📊 Installation Tracker</button>
+      <button class="app-btn" onclick="window.location.href='Incident Tracker.html'">🚨 Incident Tracker</button>
+    </div>
+
   </main>
 
   <script>
-    // WARNING: Do not use hardcoded credentials in production!
     const DEMO_USER = "CCTNS";
     const DEMO_PASS = "cctns@1234";
 
@@ -135,37 +144,31 @@
     const passwordEl = document.getElementById("password");
     const togglePwdEl = document.getElementById("togglePwd");
 
-    // Show/Hide password
+    // Check if already logged in
+    if (sessionStorage.getItem('loggedIn') === 'true') {
+        showSelectionScreen();
+    }
+
     togglePwdEl.addEventListener("click", () => {
       const isPassword = passwordEl.type === "password";
       passwordEl.type = isPassword ? "text" : "password";
       togglePwdEl.textContent = isPassword ? "Hide" : "Show";
     });
 
-    // Handle login
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const user = (userIdEl.value || "").trim();
       const pass = passwordEl.value || "";
 
-      // Basic validation
       if (!user || !pass) {
         showMessage("Please fill in both User ID and Password.", "error");
         return;
       }
 
-      // Check demo credentials
       if (user === DEMO_USER && pass === DEMO_PASS) {
-        showMessage("Login successful. Redirecting...", "success");
-
-        // Set a simple client-side session flag
         sessionStorage.setItem("loggedIn", "true");
         sessionStorage.setItem("username", user);
-
-        // Redirect after a short delay
-        setTimeout(() => {
-          window.location.href = "CCTNS.html";
-        }, 600);
+        showSelectionScreen();
       } else {
         showMessage("Invalid credentials. Please try again.", "error");
       }
@@ -174,6 +177,12 @@
     function showMessage(text, type) {
       messageEl.textContent = text;
       messageEl.className = `msg ${type}`;
+    }
+
+    function showSelectionScreen() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('formSubtitle').textContent = 'Authentication successful';
+      document.getElementById('selectionSection').style.display = 'block';
     }
   </script>
 </body>

@@ -8,14 +8,16 @@
   <link rel="icon" type="image/png" href="Prostarm logo.png">
   
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; frame-src https://app.powerbi.com;">
-<script>
+  
+  <script>
     // Check if the user is NOT logged in
     if (sessionStorage.getItem('loggedIn') !== 'true') {
         window.location.href = "Login.html";
     }
-</script>
+  </script>
+  
   <style>
-    /* Theme variables */
+    /* Theme variables from original CCTNS */
     :root {
       --page-bg: #0f172a;      /* overall page background */
       --header-bg: #111827;    /* header bar background */
@@ -49,6 +51,13 @@
     .ps-center { flex: 1; text-align: center; font-weight: 600; }
     .ps-right { display: flex; align-items: center; }
     
+    .nav-link {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 400;
+    }
+    .nav-link:hover { text-decoration: underline; color: #93c5fd; }
+    
     .ps-logout {
       cursor: pointer;
       border: 1px solid #ccc;
@@ -68,7 +77,6 @@
 
     .content {
       background: var(--content-bg);
-      /* Height will be managed dynamically by JS */
       height: calc(100vh - 57px); 
     }
 
@@ -83,24 +91,6 @@
       height: 100%;
       display: block;
       background: #ffffff;
-    }
-
-    /* Fixed the missing closing tag for this block */
-    .brand-logo {
-      position: fixed;
-      top: 6px;
-      right: 12px;
-      z-index: 1000;
-      background: rgba(255,255,255,0.9);
-      border-radius: 6px;
-      padding: 6px 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    
-    .brand-logo img {
-      display: block;
-      height: 32px;
-      width: auto;
     }
 
     /* Safe area insets for mobile devices */
@@ -119,7 +109,9 @@
     <div class="ps-left">
       <img src="Prostarm-logo.png" alt="Prostarm Logo" style="height:28px;width:auto" onerror="this.style.display='none'">
     </div>
-    <div class="ps-center">Welcome – Prostarm Info Systems Ltd.</div>
+    <div class="ps-center">
+      Installation Tracker <span style="margin: 0 10px; color: #4b5563;">|</span> <a href="Incident Tracker.html" class="nav-link">Switch to Incident Tracker &rarr;</a>
+    </div>
     <div class="ps-right">
       <button class="ps-logout" onclick="(function(){try{sessionStorage.clear();localStorage.clear();document.cookie.split(';').forEach(function(c){var eq=c.indexOf('=');var n=eq>-1?c.slice(0,eq).trim():c.trim();if(n)document.cookie=n+'=; Max-Age=0; path=/';});}catch(e){};window.location.href='Login.html?logged_out=1';})();">Logout</button>
     </div>
@@ -132,12 +124,10 @@
   </main>
 
   <script>
-    // Dynamically resizes the iframe to fit exactly beneath the header
     function resizeIframe() {
       const header = document.getElementById('appHeader');
       const content = document.getElementById('content');
       
-      // Added a safety check to ensure elements exist before measuring
       if (header && content) {
         const headerHeight = header.getBoundingClientRect().height;
         content.style.height = `calc(100vh - ${headerHeight}px)`;
