@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Incident Tracker – Prostarm</title>
+  
+  <link rel="icon" type="image/png" href="Prostarm logo.png">
+  
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; frame-src https://app.powerbi.com;">
+  
+  <script>
+    // Check if the user is NOT logged in
+    if (sessionStorage.getItem('loggedIn') !== 'true') {
+        window.location.href = "Login.html";
+    }
+  </script>
+  
+  <style>
+    /* Theme variables from original CCTNS */
+    :root {
+      --page-bg: #0f172a;      /* overall page background */
+      --header-bg: #111827;    /* header bar background */
+      --header-text: #e5e7eb;  /* header text color */
+      --content-bg: #0b132b;   /* content area background behind iframe */
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--page-bg);
+      color: var(--header-text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Helvetica Neue", Helvetica, sans-serif;
+    }
+
+    /* Prostarm minimal header styling */
+    .ps-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--header-bg);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .ps-left { display: flex; align-items: center; gap: 8px; }
+    .ps-center { flex: 1; text-align: center; font-weight: 600; }
+    .ps-right { display: flex; align-items: center; }
+    
+    .nav-link {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 400;
+    }
+    .nav-link:hover { text-decoration: underline; color: #93c5fd; }
+    
+    .ps-logout {
+      cursor: pointer;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #333;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      .ps-logout {
+        border-color: #374151;
+        background: #1f2937;
+        color: #e5e7eb;
+      }
+    }
+
+    .content {
+      background: var(--content-bg);
+      height: calc(100vh - 57px); 
+    }
+
+    .frame-wrap {
+      height: 100%;
+      width: 100%;
+    }
+    
+    iframe {
+      border: 0;
+      width: 100vw;
+      height: 100%;
+      display: block;
+      background: #ffffff;
+    }
+
+    /* Safe area insets for mobile devices */
+    @supports(padding: max(0px)) {
+      .ps-header { 
+        padding-left: max(16px, env(safe-area-inset-left)); 
+        padding-right: max(16px, env(safe-area-inset-right)); 
+      }
+      .content { padding-bottom: env(safe-area-inset-bottom); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="appHeader" class="ps-header">
+    <div class="ps-left">
+      <img src="Prostarm-logo.png" alt="Prostarm Logo" style="height:28px;width:auto" onerror="this.style.display='none'">
+    </div>
+    <div class="ps-center">
+      <a href="CCTNS.html" class="nav-link">&larr; Switch to Installation Tracker</a> <span style="margin: 0 10px; color: #4b5563;">|</span> Incident Tracker
+    </div>
+    <div class="ps-right">
+      <button class="ps-logout" onclick="(function(){try{sessionStorage.clear();localStorage.clear();document.cookie.split(';').forEach(function(c){var eq=c.indexOf('=');var n=eq>-1?c.slice(0,eq).trim():c.trim();if(n)document.cookie=n+'=; Max-Age=0; path=/';});}catch(e){};window.location.href='Login.html?logged_out=1';})();">Logout</button>
+    </div>
+  </div>
+
+  <main class="content" id="content">
+    <div class="frame-wrap">
+      <iframe id="trackerFrame" src="https://app.powerbi.com/reportEmbed?reportId=40f4a76c-c68d-4c18-98c8-5b95d723b6de&autoAuth=true&ctid=000090a2-d865-4861-ba69-37e8e4745172&actionBarEnabled=true" title="Incident Tracker" allowfullscreen="true"></iframe>
+    </div>						   
+  </main>
+
+  <script>
+    function resizeIframe() {
+      const header = document.getElementById('appHeader');
+      const content = document.getElementById('content');
+      
+      if (header && content) {
+        const headerHeight = header.getBoundingClientRect().height;
+        content.style.height = `calc(100vh - ${headerHeight}px)`;
+      }
+    }
+    
+    window.addEventListener('resize', resizeIframe);
+    window.addEventListener('orientationchange', resizeIframe);
+    window.addEventListener('DOMContentLoaded', resizeIframe);
+  </script>
+
+</body>
+</html>
