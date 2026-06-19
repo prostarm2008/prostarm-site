@@ -1,159 +1,300 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portal Login</title>
   <link rel="icon" type="image/png" href="Prostarm logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary: #0d6efd;
-      --primary-hover: #0b5ed7;
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --error: #ef4444;
+    :root { 
+      --primary: #2563eb; 
+      --primary-hover: #1d4ed8; 
+      --card: #ffffff; 
+      --text-main: #0f172a; 
+      --text-muted: #64748b; 
+      --border: #e2e8f0;
+      --error: #ef4444; 
       --success: #16a34a;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: linear-gradient(135deg, #eef2ff, #f8fafc);
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      color: var(--text);
-    }
-    .login-card {
-      width: 360px;
-      max-width: 92vw;
-      background: var(--card);
-      border-radius: 14px;
-      box-shadow: 0 20px 30px rgba(0,0,0,0.08);
-      padding: 28px 26px;
-      animation: floatIn 300ms ease-out;
-    }
-    @keyframes floatIn {
-      from { transform: translateY(8px); opacity: 0; }
-      to   { transform: translateY(0); opacity: 1; }
+      --info: #3b82f6;
+      --input-bg: #f8fafc;
     }
     
-    .brand {
+    body { 
+      font-family: 'Inter', system-ui, sans-serif; 
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+      min-height: 100vh; 
+      display: grid; 
+      place-items: center; 
+      margin: 0; 
+    }
+    
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .login-card { 
+      background: var(--card); 
+      border-radius: 24px; 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+      padding: 40px 32px; 
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .brand { 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
-      text-align: center; 
-      margin-bottom: 16px;
+      margin-bottom: 32px; 
     }
-    .main-logo {
-      width: 220px; 
-      height: auto;
-      margin-bottom: 16px;
-    }
-    h1 { font-size: 1.25rem; margin: 0 0 4px; }
-    p.subtitle { margin: 0 0 18px; color: var(--muted); font-size: 0.95rem; }
 
-    label { font-weight: 600; font-size: 0.9rem; display: block; margin: 12px 0 6px; }
-    .field {
-      display: flex; align-items: center; gap: 8px;
-      border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px;
-      background: #fafafa;
+    .main-logo { 
+      width: 200px; 
+      height: auto; 
+      margin-bottom: 16px; 
+      object-fit: contain;
     }
-    .field input {
-      border: none; outline: none; flex: 1; background: transparent; font-size: 0.98rem;
+
+    .brand h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
     }
+
+    .brand p {
+      margin: 4px 0 0 0;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .field { 
+      position: relative;
+      display: flex; 
+      align-items: center; 
+    }
+
+    .field svg {
+      position: absolute;
+      left: 14px;
+      width: 20px;
+      height: 20px;
+      color: #94a3b8;
+      transition: color 0.3s ease;
+      pointer-events: none;
+    }
+
+    .field input { 
+      width: 100%;
+      background: var(--input-bg);
+      border: 2px solid var(--border); 
+      border-radius: 12px; 
+      padding: 12px 60px 12px 42px; 
+      font-size: 1rem; 
+      font-family: inherit;
+      color: var(--text-main);
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .field input:focus + svg {
+      color: var(--primary);
+    }
+
     .toggle {
-      cursor: pointer; color: var(--muted); font-size: 0.9rem; user-select: none;
+      position: absolute;
+      right: 12px;
+      cursor: pointer; 
+      color: var(--text-muted); 
+      font-size: 0.85rem; 
+      font-weight: 600;
+      user-select: none;
+      transition: color 0.2s ease;
     }
-    .actions { margin-top: 16px; }
-    button.btn-primary {
-      width: 100%; padding: 12px 14px; border: none; border-radius: 10px;
-      background: var(--primary); color: white; font-weight: 700; font-size: 1rem;
-      cursor: pointer; box-shadow: 0 8px 16px rgba(13,110,253,0.25);
-      transition: background 0.2s;
+
+    .toggle:hover {
+      color: var(--primary);
     }
-    button.btn-primary:hover { background: var(--primary-hover); }
-    
+
+    button.btn-primary { 
+      width: 100%; 
+      padding: 14px; 
+      border: none; 
+      border-radius: 12px; 
+      background: linear-gradient(to right, var(--primary), #3b82f6); 
+      color: white; 
+      font-weight: 600; 
+      font-size: 1rem; 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+      margin-top: 8px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    button.btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    button.btn-primary:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    button.btn-primary:disabled {
+      background: #94a3b8; 
+      box-shadow: none;
+      cursor: not-allowed; 
+      opacity: 0.8;
+    }
+
+    .msg { 
+      margin-top: 16px; 
+      text-align: center; 
+      font-size: 0.875rem; 
+      font-weight: 500; 
+      min-height: 20px;
+    }
+    .msg.error { color: var(--error); }
+    .msg.info { color: var(--info); }
+    .msg.success { color: var(--success); }
+
     /* Selection Screen Styles */
     #selectionSection { display: none; text-align: center; }
-    .app-btn {
-      width: 100%; padding: 16px; margin-bottom: 12px; border: 2px solid #e5e7eb;
-      border-radius: 10px; background: transparent; color: var(--text);
-      font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
-    }
-    .app-btn:hover { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
     
-    .logout-btn { border-color: #fca5a5; color: var(--error); margin-top: 10px; padding: 12px;}
-    .logout-btn:hover { border-color: var(--error); background: #fef2f2; color: var(--error); }
+    .app-btn {
+      width: 100%; 
+      padding: 16px; 
+      margin-bottom: 12px; 
+      border: 2px solid var(--border);
+      border-radius: 12px; 
+      background: var(--input-bg); 
+      color: var(--text-main);
+      font-weight: 600; 
+      font-size: 1rem; 
+      cursor: pointer; 
+      transition: all 0.2s ease;
+    }
+    
+    .app-btn:hover { 
+      border-color: var(--primary); 
+      background: #eff6ff; 
+      color: var(--primary); 
+    }
+    
+    .logout-btn { 
+      border-color: #fca5a5; 
+      color: var(--error); 
+      margin-top: 8px; 
+      background: transparent;
+    }
+    
+    .logout-btn:hover { 
+      border-color: var(--error); 
+      background: #fef2f2; 
+      color: var(--error); 
+    }
 
-    .msg { margin-top: 10px; font-size: 0.92rem; text-align: center; }
-    .msg.error { color: var(--error); }
-    .msg.success { color: var(--success); }
+    /* Mobile Responsiveness */
+    @media (max-width: 480px) {
+      .login-card { padding: 30px 20px; }
+      .brand h2 { font-size: 1.3rem; }
+      .main-logo { width: 180px; }
+    }
   </style>
 </head>
 <body>
-  <main class="login-card">
-    <div class="brand">
-      <img src="Prostarm-logo.png" alt="ProstarM Logo" class="main-logo" onerror="this.style.display='none'">
-      <h1>ProstarM Portal</h1>
-      <p class="subtitle" id="formSubtitle">Sign in to continue</p>
-    </div>
+  
+  <div class="login-container">
+    <main class="login-card">
+      <div class="brand">
+        <img src="Prostarm-logo.png" alt="ProstarM Logo" class="main-logo" onerror="this.style.display='none'">
+        <h2>ProstarM Portal</h2>
+        <p id="formSubtitle">Sign in to continue</p>
+      </div>
 
-    <div id="loginSection">
-      <form id="loginForm" autocomplete="off" novalidate>
-        <label for="userId">User ID</label>
-        <div class="field">
-          <input type="text" id="userId" name="userId" placeholder="Enter User ID" required />
-        </div>
-
-        <label for="password">Password</label>
-        <div class="field">
-          <input type="password" id="password" name="password" placeholder="Enter Password" required />
-          <span class="toggle" id="togglePwd">Show</span>
-        </div>
-
-        <div class="actions">
+      <div id="loginSection">
+        <form id="loginForm" autocomplete="off" novalidate>
+          <div class="input-group">
+            <label for="userId">User ID</label>
+            <div class="field">
+              <input type="text" id="userId" name="userId" placeholder="Enter User ID" required />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+          </div>
+          
+          <div class="input-group">
+            <label for="password">Password</label>
+            <div class="field">
+              <input type="password" id="password" name="password" placeholder="Enter Password" required />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span class="toggle" id="togglePwd">Show</span>
+            </div>
+          </div>
+          
           <button type="submit" id="loginBtn" class="btn-primary">Login</button>
-        </div>
-        <div id="message" class="msg" aria-live="polite"></div>
-      </form>
-    </div>
+          <div id="message" class="msg" aria-live="polite"></div>
+        </form>
+      </div>
 
-    <div id="selectionSection">
-      <h3 style="margin-top: 0; margin-bottom: 20px;">Select Application</h3>
-      <button class="app-btn" onclick="window.location.href='Installation Tracker.html'">📊 Installation Tracker</button>
-      <button class="app-btn" onclick="window.location.href='Incident Tracker.html'">🚨 Incident Tracker</button>
-      <button class="app-btn logout-btn" onclick="logoutUser()">🚪 Logout</button>
-    </div>
+      <div id="selectionSection">
+        <h3 style="margin-top: 0; margin-bottom: 20px; color: var(--text-main);">Select Application</h3>
+        <button class="app-btn" onclick="window.location.href='Installation Tracker.html'">📊 Installation Tracker</button>
+        <button class="app-btn" onclick="window.location.href='Incident Tracker.html'">🚨 Incident Tracker</button>
+        <button class="app-btn logout-btn" onclick="logoutUser()">🚪 Logout</button>
+      </div>
 
-  </main>
-
+    </main>
+  </div>
+  
   <script>
-    // System Credentials
-    const DEMO_USER = "CCTNS";
-    const DEMO_PASS = "cctns@1234";
+    // Your specific Power Automate Login URL
+    const LOGIN_API = "https://default000090a2d8654861ba6937e8e47451.72.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/a87f031f84bc442799055f58172f563e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=WC42qgB-f5c_q7kz-RSR6SEa39lUp8kutiHNnbP5Wzk";
 
     const form = document.getElementById("loginForm");
     const messageEl = document.getElementById("message");
     const userIdEl = document.getElementById("userId");
     const passwordEl = document.getElementById("password");
     const togglePwdEl = document.getElementById("togglePwd");
+    const btn = document.getElementById("loginBtn");
 
     // Auto-login check
     if (sessionStorage.getItem('loggedIn') === 'true') {
         showSelectionScreen();
     }
 
+    // Show/Hide Password Toggle
     togglePwdEl.addEventListener("click", () => {
       const isPassword = passwordEl.type === "password";
       passwordEl.type = isPassword ? "text" : "password";
       togglePwdEl.textContent = isPassword ? "Hide" : "Show";
     });
 
-    form.addEventListener("submit", (e) => {
+    // Form Submission & API Call
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const user = (userIdEl.value || "").trim();
       const pass = passwordEl.value || "";
@@ -163,12 +304,50 @@
         return;
       }
 
-      if (user === DEMO_USER && pass === DEMO_PASS) {
-        sessionStorage.setItem("loggedIn", "true");
-        sessionStorage.setItem("username", user);
-        showSelectionScreen();
-      } else {
-        showMessage("Invalid credentials. Please try again.", "error");
+      btn.disabled = true;
+      btn.textContent = "Verifying...";
+      showMessage("Connecting to secure server... (up to 30s)", "info");
+
+      // Set a 60-second timeout so the browser doesn't hang forever
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      try {
+        const res = await fetch(LOGIN_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            inputUsername: user, 
+            inputPassword: pass 
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId); // Stop the timer on success
+        const data = await res.json().catch(() => ({}));
+        
+        if (res.ok && data.status === "success") {
+          sessionStorage.setItem("loggedIn", "true");
+          sessionStorage.setItem("username", user);
+          showSelectionScreen();
+        } else {
+          console.error("Login Error from PA:", data);
+          showMessage(data.message || "Invalid credentials. Please try again.", "error");
+          btn.disabled = false; 
+          btn.textContent = "Login";
+        }
+      } catch(err) {
+        clearTimeout(timeoutId);
+        console.error("Network Error:", err);
+        
+        if (err.name === 'AbortError') {
+            showMessage("Request timed out. The server took too long.", "error");
+        } else {
+            showMessage("Server connection failed.", "error");
+        }
+        
+        btn.disabled = false; 
+        btn.textContent = "Login";
       }
     });
 
