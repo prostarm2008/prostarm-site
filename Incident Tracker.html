@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCTNS – Incident Tracking System</title>
+    <link rel="icon" type="image/png" href="Prostarm logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        // SECURITY CHECK - Redirects to login if session is empty
+        if (sessionStorage.getItem('loggedIn') !== 'true') {
+            window.location.href = 'Login.html';
+        }
+        function performLogout() {
+            sessionStorage.removeItem('loggedIn');
+            sessionStorage.removeItem('username');
+            window.location.href = 'Login.html';
+        }
+    </script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
+            --border: #30363d; --accent: #238636; --accent2: #1f6feb;
+            --orange: #e3b341; --green: #3fb950; --text: #e6edf3;
+            --muted: #8b949e; --radius: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .header-left, .header-right { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .header-right { justify-content: flex-end; }
+        .header-center { flex: 2; text-align: center; }
+        .logo-img { height: 42px; object-fit: contain; }
+        .header-title { font-size: 1.8rem; font-weight: bold; letter-spacing: -0.02em; }
+        .header-title span { color: var(--accent2); }
+
+        /* Action Buttons */
+        .action-btn { display:flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); color:var(--text); font-size:0.72rem; font-weight:600; padding:5px 12px; border-radius:20px; cursor:pointer; transition:all .2s; }
+        .action-btn:hover { background:var(--border); color:#fff; }
+        .action-btn.logout { color: var(--red); border-color: rgba(248,81,73,0.3); }
+        .action-btn.logout:hover { background: rgba(248,81,73,0.15); border-color: var(--red); }
+
+        .live-badge { display:flex; align-items:center; gap:6px; background:rgba(63,185,80,.12); border:1px solid rgba(63,185,80,.3); color:var(--green); font-size:0.72rem; font-weight:600; padding:4px 10px; border-radius:20px; }
+        .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 1.6s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+        #fetchBanner { position:fixed; bottom:18px; right:18px; z-index:9998; padding:10px 18px; border-radius:10px; font-size:0.85rem; font-weight:600; max-width:380px; box-shadow:0 4px 20px rgba(0,0,0,.4); display:none; }
+        
+        .loading-overlay { position:fixed; inset:0; background:rgba(13,17,23,.92); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:9999; gap:14px; }
+        .spinner { width:36px; height:36px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--accent2); animation:spin .8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .loading-text { color:var(--muted); font-size:0.88rem; font-weight: 500; text-align: center;}
+        .loading-subtext { color:var(--orange); font-size:0.75rem; font-weight: 400; margin-top: -8px;}
+
+        .page { padding:16px 24px; display:flex; flex-direction:column; gap:14px; opacity: 0; transition: opacity 0.5s ease-in; }
+        .page.loaded { opacity: 1; }
+
+        .top-row { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+        .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; display:flex; align-items:center; gap:12px; transition:border-color .2s; }
+        .kpi-card:hover { border-color:var(--accent2); }
+        .kpi-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+        .kpi-icon.total  { background:rgba(31,111,235,.15); color: var(--accent2); }
+        .kpi-icon.open   { background:rgba(227,179,65,.15); color: var(--orange); }
+        .kpi-icon.closed { background:rgba(63,185,80,.15); color: var(--green); }
+        .kpi-val { font-size:1.9rem; font-weight:800; line-height:1; letter-spacing:-0.03em; }
+        .kpi-val.total  { color:var(--accent2); }
+        .kpi-val.open   { color:var(--orange); }
+        .kpi-val.closed { color:var(--green); }
+        .kpi-lbl { font-size:0.75rem; color:var(--muted); font-weight:500; margin-top:3px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .filters-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 18px; display:flex; align-items:center; justify-content: space-between; width: 100%; }
+        .filters-left { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .filter-group { display:flex; flex-direction:column; gap:6px; }
+        .filter-lbl { font-size:0.68rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+        
+        .status-btns { display:inline-flex; gap:4px; background:var(--bg); padding:4px; border-radius:8px; border:1px solid var(--border); }
+        .status-btn { padding:6px 16px; background:transparent; border:none; border-radius:6px; color:var(--muted); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all .2s ease; font-family:inherit; }
+        .status-btn:hover { color:var(--text); }
+        .status-btn.active { background:var(--surface2); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        .status-btn[data-filter="All"].active { color: var(--accent2); border: 1px solid rgba(31,111,235,0.3); }
+        .status-btn[data-filter="Open"].active { color: var(--orange); border: 1px solid rgba(227,179,65,0.3); }
+        .status-btn[data-filter="Closed"].active { color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+
+        select.filter-select { padding:7px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:7px; color:var(--text); font-size:0.78rem; font-weight:500; cursor:pointer; outline:none; font-family:inherit; min-width: 140px; }
+        select.filter-select:focus { border-color:var(--accent2); }
+        .date-inputs { display:flex; gap:5px; align-items:center; }
+        .date-inputs input { padding:6px 8px; background:var(--surface2); border:1px solid var(--border); border-radius:7px; color:var(--text); font-size:0.75rem; font-family:inherit; outline:none; width:125px; }
+        .date-sep { color:var(--muted); font-size:0.78rem; }
+        .filter-divider { width:1px; height:36px; background:var(--border); flex-shrink:0; margin: 0 5px; }
+
+        .export-btn { display:flex; align-items:center; gap:6px; background:rgba(35, 134, 54, 0.15); border:1px solid rgba(63,185,80,.4); color:var(--green); padding:8px 16px; border-radius:8px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:all .2s; font-family:inherit; margin-left: auto; }
+        .export-btn:hover { background:var(--accent); color: white; border-color: var(--accent); }
+
+        .charts-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+        .panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; display: flex; flex-direction: column; }
+        .panel-title { font-size:0.7rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:12px; flex-shrink: 0; }
+        .chart-wrap { position:relative; width: 100%; height: 200px; }
+        canvas { width: 100% !important; height: 100% !important; }
+
+        .table-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; display:flex; flex-direction:column; }
+        .table-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-shrink:0; }
+        .table-scroll { overflow-y:auto; overflow-x:auto; border-radius:8px; border:1px solid var(--border); max-height:320px; }
+        table { width:100%; border-collapse:collapse; font-size:0.78rem; white-space:nowrap; }
+        th { background:var(--surface2); padding:10px 14px; text-align:left; font-size:0.67rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; position:sticky; top:0; z-index:1; border-bottom:1px solid var(--border); }
+        td { padding:10px 14px; border-bottom:1px solid var(--border); color:var(--text); }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:var(--surface2); }
+        
+        .pill { display:inline-block; padding:4px 10px; border-radius:20px; font-size:0.67rem; font-weight:600; }
+        .pill.open   { background:rgba(227,179,65,.15); color:var(--orange); }
+        .pill.closed { background:rgba(63,185,80,.15);  color:var(--green); }
+        
+        .no-results { text-align:center; padding:30px; color:var(--muted); font-size:0.85rem; display:none; }
+
+        .d-row { display:flex; align-items:center; gap:8px; flex-shrink:0; margin-bottom: 5px; }
+        .d-label { font-size:0.72rem; color:var(--muted); font-weight:500; width:110px; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .d-bar-wrap { flex:1; height:10px; background:var(--surface2); border-radius:6px; overflow:hidden; }
+        .d-bar { height:100%; border-radius:6px; transition:width .5s ease; }
+        .d-count { font-size:0.72rem; font-weight:700; color:var(--text); width:20px; text-align:right; flex-shrink:0; }
+
+        ::-webkit-scrollbar { width:5px; height:5px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+        ::-webkit-scrollbar-thumb:hover { background:var(--muted); }
+
+        @media (max-width: 1200px) {
+            .charts-row { grid-template-columns: 1fr 1fr; }
+            .filters-card { flex-wrap: wrap; justify-content: flex-start; gap: 15px; }
+            .filter-divider { display: none; }
+            .export-btn { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loadingScreen" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Fetching Incident Records...</div>
+    <div class="loading-subtext" id="loadingSubtext">Connecting to Power Automate</div>
+</div>
+
+<div id="fetchBanner"></div>
+
+<header class="header">
+    <div class="header-left">
+        <img src="CCTNS Logo.png" alt="Maharashtra Police" class="logo-img" onerror="this.style.display='none'">
+    </div>
+    <div class="header-center">
+        <div class="header-title"><span>CCTNS</span> — Incident Tracking System</div>
+    </div>
+    <div class="header-right">
+        <button class="action-btn" onclick="window.location.href='Login.html'" title="Return to App Selection">🏠 Menu</button>
+        <button class="action-btn" id="forceRefreshBtn" title="Fetch latest data from Database">↻ Refresh</button>
+        <button class="action-btn logout" onclick="performLogout()" title="Log out securely">🚪 Logout</button>
+        
+        <div class="live-badge"><div class="live-dot"></div>Live</div>
+        <img src="Prostarm-logo.png" alt="PROSTARM" class="logo-img" onerror="this.style.display='none'">
+    </div>
+</header>
+
+<main class="page" id="mainContent">
+
+    <div class="top-row">
+        <div class="kpi-card"><div class="kpi-icon total">📋</div><div><div class="kpi-val total" id="kpiTotal">0</div><div class="kpi-lbl">Total Calls</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon open">⏳</div><div><div class="kpi-val open" id="kpiOpen">0</div><div class="kpi-lbl">Open Calls</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon closed">✅</div><div><div class="kpi-val closed" id="kpiClosed">0</div><div class="kpi-lbl">Closed Calls</div></div></div>
+    </div>
+
+    <div class="filters-card">
+        <div class="filters-left">
+            <div class="filter-group">
+                <div class="filter-lbl">Status Filter</div>
+                <div class="status-btns">
+                    <button class="status-btn active" data-filter="All">All Calls</button>
+                    <button class="status-btn" data-filter="Open">Open</button>
+                    <button class="status-btn" data-filter="Closed">Closed</button>
+                </div>
+            </div>
+            
+            <div class="filter-divider"></div>
+            
+            <div class="filter-group">
+                <div class="filter-lbl">Time Period (Incident Date)</div>
+                <select class="filter-select" id="timeFilter">
+                    <option value="All">All Time</option>
+                    <option value="Daily">Today</option>
+                    <option value="Weekly">Last 7 Days</option>
+                    <option value="Monthly">Last 30 Days</option>
+                    <option value="Yearly">This Year</option>
+                    <option value="Custom">Custom Range</option>
+                </select>
+            </div>
+            <div id="customDateContainer" style="display:none">
+                <div class="filter-group">
+                    <div class="filter-lbl">Custom Dates</div>
+                    <div class="date-inputs">
+                        <input type="date" id="customStartDate">
+                        <span class="date-sep">→</span>
+                        <input type="date" id="customEndDate">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="export-btn" id="exportBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export CSV
+        </button>
+    </div>
+
+    <div class="charts-row">
+        <div class="panel">
+            <div class="panel-title">Open vs Closed</div>
+            <div class="chart-wrap"><canvas id="doughnutChart"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Calls by Asset Type</div>
+            <div class="chart-wrap"><canvas id="assetChart"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Calls by Office Type</div>
+            <div class="chart-wrap"><canvas id="officeChart"></canvas></div>
+        </div>
+        <div class="panel" style="display:flex;flex-direction:column;">
+            <div class="panel-title">Calls by District</div>
+            <div id="districtList" style="overflow-y:auto;flex:1;max-height:200px;display:flex;flex-direction:column;gap:5px;padding-right:4px;"></div>
+        </div>
+    </div>
+
+    <div class="table-panel">
+        <div class="table-header">
+            <div class="panel-title" style="margin:0">Incident Details</div>
+        </div>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>UID</th>
+                        <th>Office Type</th>
+                        <th>Asset Type</th>
+                        <th>Issue Type</th>
+                        <th>Office Name</th>
+                        <th>Address</th>
+                        <th>District</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="incidentTableBody"></tbody>
+            </table>
+            <div id="noResultsMsg" class="no-results">No incidents match the selected filters.</div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    Chart.register(ChartDataLabels);
+    
+    // CACHE VARIABLES
+    const CACHE_KEY = 'cctns_incident_data_v1';
+    const CACHE_TIME_KEY = 'cctns_incident_time_v1';
+    const CACHE_DURATION_MS = 15 * 60 * 1000;
+
+    const POWER_AUTOMATE_URL = "https://default000090a2d8654861ba6937e8e47451.72.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/f62a1680d3f44d4f921640b10b143d44/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=o45TBtlCyRGljObWW78N7NtmE9GG4zwOMJ4JxVuSqXQ";
+
+    let dashboardData=[], doughnutChart, assetChart, officeChart;
+    let activeStatus='All', currentFilteredData=[];
+    let isInitialLoad = true;
+
+    function showBanner(msg, isError){
+        let b=document.getElementById('fetchBanner');
+        b.style.background=isError?'rgba(248,81,73,.15)':'rgba(63,185,80,.15)';
+        b.style.border=isError?'1px solid rgba(248,81,73,.4)':'1px solid rgba(63,185,80,.4)';
+        b.style.color=isError?'#f85149':'#3fb950';
+        b.textContent=msg; b.style.display='block';
+        if(!isError) setTimeout(()=>b.style.display='none', 5000);
+    }
+
+    function normalizeDateForLogic(isoString) {
+        if (!isoString || isoString === '-' || String(isoString).trim() === '') return '-';
+        try {
+            const d = new Date(isoString);
+            if (isNaN(d.getTime())) return isoString; 
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`; 
+        } catch(e) {
+            return isoString;
+        }
+    }
+
+    function formatIndianDisplayDate(yyyy_mm_dd) {
+        if (!yyyy_mm_dd || yyyy_mm_dd === '-') return '-';
+        const parts = yyyy_mm_dd.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return yyyy_mm_dd;
+    }
+
+    function normalizeRow(r){
+        let rawDate = r.Date || r.date || r.Created || '-';
+        return {
+            date: normalizeDateForLogic(rawDate),
+            uid: r.UID || r.uid || r['UID Number'] || r.UID_Number || '-',
+            officeType: r['Office Type'] || r.officeType || r.office_type || r.Office_Type || 'Unknown',
+            asset: r['Assets Type'] || r['Asset Type'] || r.asset || r.Asset_Type || '-',
+            issue: r['Issue Type'] || r.issue || r.Issue_Type || '-',
+            officeName: r['Office Name'] || r.officeName || r.Office_Name || '-',
+            address: r.Address || r.address || '-',
+            district: r.District || r.district || '-',
+            status: r['Status (Closed / Open)'] || r.Status || r.status || '-'
+        };
+    }
+
+    function countBy(data,key){return data.reduce((acc,r)=>{if(r[key] && r[key] !== '-') acc[r[key]]=(acc[r[key]]||0)+1;return acc;},{});}
+
+    const PALETTE=['#3fb950','#58a6ff','#e3b341','#f78166','#bc8cff','#56d364','#79c0ff','#ffa657','#ff7b72','#d2a8ff'];
+
+    function initCharts(){
+        const barOpts={indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:38}},plugins:{legend:{display:false},datalabels:{color:'#8b949e',anchor:'end',align:'end',offset:5,font:{weight:'600',size:11}}},scales:{x:{display:false},y:{grid:{display:false},border:{display:false},ticks:{color:'#8b949e',font:{size:11}}}}};
+
+        doughnutChart=new Chart(document.getElementById('doughnutChart'),{
+            type:'doughnut',
+            data:{labels:['Closed','Open'],datasets:[{data:[0,0],backgroundColor:['#3fb950','#e3b341'],borderWidth:0,hoverOffset:6}]},
+            options:{responsive:true,maintainAspectRatio:false,cutout:'62%',layout:{padding:{top:18,bottom:6,left:28,right:28}},plugins:{legend:{position:'bottom',labels:{color:'#8b949e',usePointStyle:true,boxWidth:8,font:{size:11}}},datalabels:{color:'#e6edf3',font:{weight:'700',size:13},formatter:(v,ctx)=>{const tot=ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);return(!tot||!v)?'':((v/tot)*100).toFixed(1)+'%';}}}}
+        });
+        assetChart    = new Chart(document.getElementById('assetChart'),    {type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:PALETTE,barThickness:12}]},options:barOpts});
+        officeChart   = new Chart(document.getElementById('officeChart'),   {type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:PALETTE,barThickness:16}]},options:barOpts});
+    }
+
+    function updateDashboard(){
+        const activeTime=document.getElementById('timeFilter').value;
+        const sv=document.getElementById('customStartDate').value;
+        const ev=document.getElementById('customEndDate').value;
+        const today=new Date();today.setHours(0,0,0,0);
+
+        currentFilteredData=dashboardData.filter(row=>{
+            const ms=activeStatus==='All'||activeStatus===row.status;
+            let mt=true;
+            if(activeTime!=='All'&&row.date&&row.date!=='-'){
+                const rd=new Date(row.date);rd.setHours(0,0,0,0);
+                if(activeTime==='Custom'){
+                    const s=sv?new Date(sv):null,e=ev?new Date(ev):null;
+                    if(s)s.setHours(0,0,0,0);if(e)e.setHours(23,59,59,999);
+                    if(s&&e)mt=rd>=s&&rd<=e;else if(s)mt=rd>=s;else if(e)mt=rd<=e;
+                }else{
+                    const diff=Math.ceil(Math.abs(today-rd)/86400000);
+                    if(activeTime==='Daily')mt=diff===0;
+                    if(activeTime==='Weekly')mt=diff<=7&&rd<=today;
+                    if(activeTime==='Monthly')mt=diff<=30&&rd<=today;
+                    if(activeTime==='Yearly')mt=rd.getFullYear()===today.getFullYear();
+                }
+            } else if (activeTime!=='All') {
+                mt = false;
+            }
+            return ms&&mt;
+        });
+
+        const open=currentFilteredData.filter(d=>d.status==='Open').length;
+        const closed=currentFilteredData.filter(d=>d.status==='Closed').length;
+        document.getElementById('kpiTotal').textContent=currentFilteredData.length;
+        document.getElementById('kpiOpen').textContent=open;
+        document.getElementById('kpiClosed').textContent=closed;
+
+        const tbody=document.getElementById('incidentTableBody');
+        document.getElementById('noResultsMsg').style.display=currentFilteredData.length?'none':'block';
+        tbody.innerHTML='';
+        currentFilteredData.forEach(row=>{
+            const tr=document.createElement('tr');
+            const displayDate = formatIndianDisplayDate(row.date);
+            const statusClass = (row.status||'').toLowerCase();
+            tr.innerHTML=`<td>${displayDate}</td><td style="color:#58a6ff;font-weight:600">${row.uid||''}</td><td>${row.officeType||''}</td><td>${row.asset||''}</td><td>${row.issue||''}</td><td>${row.officeName||''}</td><td>${row.address||''}</td><td>${row.district||''}</td><td><span class="pill ${statusClass}">${row.status||''}</span></td>`;
+            tbody.appendChild(tr);
+        });
+
+        doughnutChart.data.datasets[0].data=[closed,open];doughnutChart.update();
+        const upd=(ch,key)=>{const s=Object.entries(countBy(currentFilteredData,key)).sort((a,b)=>b[1]-a[1]);ch.data.labels=s.map(i=>i[0]);ch.data.datasets[0].data=s.map(i=>i[1]);ch.update();};
+        upd(assetChart,'asset');upd(officeChart,'officeType');
+
+        const distData=Object.entries(countBy(currentFilteredData,'district')).sort((a,b)=>b[1]-a[1]);
+        const maxD=distData[0]?distData[0][1]:1;
+        const distColors=['#3fb950','#58a6ff','#e3b341','#f78166','#bc8cff','#56d364','#79c0ff','#ffa657','#ff7b72','#d2a8ff'];
+        const list=document.getElementById('districtList');
+        list.innerHTML='';
+        distData.forEach(([name,count],i)=>{
+            const pct=Math.round((count/maxD)*100);
+            const color=distColors[i%distColors.length];
+            list.innerHTML+=`<div class="d-row">
+                <div class="d-label" title="${name}">${name}</div>
+                <div class="d-bar-wrap"><div class="d-bar" style="width:${pct}%;background:${color}"></div></div>
+                <div class="d-count">${count}</div>
+            </div>`;
+        });
+        if(!distData.length) list.innerHTML='<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px">No data</div>';
+    }
+
+    function exportToCSV(){
+        if(!currentFilteredData.length){alert("No data to export.");return;}
+        const h=["Date","UID","Office Type","Assets Type","Issue Type","Office Name","Address","District","Status"];
+        const rows=currentFilteredData.map(r=>{
+            const exportDate = formatIndianDisplayDate(r.date);
+            return [exportDate, r.uid, r.officeType, r.asset, r.issue, r.officeName, r.address, r.district, r.status].map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(',');
+        });
+        const b=new Blob([[h.join(','),...rows].join('\n')],{type:'text/csv'});
+        const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`CCTNS_Incident_Export_${document.getElementById('timeFilter').value}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);
+    }
+
+    document.querySelectorAll('.status-btn').forEach(btn=>{
+        btn.addEventListener('click',function(){
+            document.querySelectorAll('.status-btn').forEach(b=>b.classList.remove('active'));
+            this.classList.add('active');
+            activeStatus=this.dataset.filter;
+            updateDashboard();
+        });
+    });
+    
+    const tf=document.getElementById('timeFilter');
+    tf.addEventListener('change',()=>{
+        document.getElementById('customDateContainer').style.display=tf.value==='Custom'?'block':'none';
+        if(tf.value!=='Custom')updateDashboard();
+    });
+    document.getElementById('customStartDate').addEventListener('change',updateDashboard);
+    document.getElementById('customEndDate').addEventListener('change',updateDashboard);
+    document.getElementById('exportBtn').addEventListener('click',exportToCSV);
+
+    async function loadLiveExcelData(forceRefresh = false){
+        document.getElementById('loadingScreen').style.display='flex';
+        
+        if (!forceRefresh) {
+            const cachedDataString = localStorage.getItem(CACHE_KEY);
+            const cacheTimestamp = localStorage.getItem(CACHE_TIME_KEY);
+            
+            if (cachedDataString && cacheTimestamp) {
+                const now = new Date().getTime();
+                const timeDiff = now - parseInt(cacheTimestamp);
+                
+                if (timeDiff < CACHE_DURATION_MS) {
+                    dashboardData = JSON.parse(cachedDataString).map(normalizeRow);
+                    if(isInitialLoad) { initCharts(); isInitialLoad = false; }
+                    updateDashboard();
+                    
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('mainContent').classList.add('loaded');
+                    showBanner(`⚡ Loaded instantly from browser cache (${dashboardData.length} records)`, false);
+                    return; 
+                }
+            }
+        }
+
+        try{
+            document.getElementById('loadingText').innerText = "Fetching Incident Records...";
+            document.getElementById('loadingSubtext').innerText = "This usually takes a few seconds...";
+            
+            let response;
+            try { response = await fetch(POWER_AUTOMATE_URL, { method: 'GET' }); } 
+            catch(e) { console.warn("GET failed, trying POST"); }
+            
+            if (!response || !response.ok) {
+                response = await fetch(POWER_AUTOMATE_URL, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}) 
+                });
+            }
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const liveData = await response.json();
+            
+            let rawArrayToCache = [];
+            if (liveData && liveData.value && Array.isArray(liveData.value)) {
+                rawArrayToCache = liveData.value;
+            } else if (Array.isArray(liveData)) {
+                rawArrayToCache = liveData;
+            } else {
+                throw new Error("Unexpected JSON format received.");
+            }
+
+            localStorage.setItem(CACHE_KEY, JSON.stringify(rawArrayToCache));
+            localStorage.setItem(CACHE_TIME_KEY, new Date().getTime().toString());
+
+            dashboardData = rawArrayToCache.map(normalizeRow);
+            if(isInitialLoad) { initCharts(); isInitialLoad = false; }
+            updateDashboard();
+            showBanner(`✓ Live data successfully loaded (${dashboardData.length} records)`, false);
+
+        }catch(e){
+            console.error('Fetch failed:',e);
+            showBanner(`⚠ Could not load live data. Showing demo data.`, true);
+            const t=new Date().toISOString().split('T')[0];
+            const demoRawData=[
+                {date:t,uid:'MHCCTNS1987',officeType:'Police Station',asset:'Desktop',issue:'Remote Support',officeName:'MIDC MALKAPUR',address:'Nh 53 Near Dasarkhed Fata',district:'BULDHANA',status:'Closed'},
+                {date:t,uid:'MHCCTNS2059',officeType:'Police Station',asset:'UPS 2KVA 72 VDC',issue:'Not Working',officeName:'AKOT CITY',address:'Akot City Main Branch',district:'NANDED',status:'Closed'},
+                {date:t,uid:'MHCCTNS1211',officeType:'Police Station',asset:'UPS 2KVA 72 VDC',issue:'Not Working',officeName:'KRANTI CHOWK',address:'Kranti Chowk Main Circle',district:'SAMBHAJI NAGAR',status:'Open'},
+                {date:t,uid:'MHCCTNS1310',officeType:'Police Station',asset:'UPS 2KVA 72 VDC',issue:'Not Working',officeName:'JALGAON HQ',address:'Jalgaon District HQ',district:'JALGAON',status:'Closed'},
+                {date:t,uid:'MHCCTNS2170',officeType:'Police Station',asset:'Printer',issue:'Not Working',officeName:'SANGLI PS',address:'Sangli City Main',district:'SANGLI',status:'Closed'},
+                {date:t,uid:'MHCCTNS1199',officeType:'Police Station',asset:'CPU',issue:'Not Working',officeName:'MUMBAI CENTRAL',address:'Mumbai Central Station',district:'MUMBAI',status:'Open'},
+                {date:t,uid:'MHCCTNS2108',officeType:'HIGHER OFFICE',asset:'Printer',issue:'Not Working',officeName:'HO GONDIA',address:'Gondia Head Office',district:'GONDIA',status:'Closed'},
+                {date:t,uid:'MHCCTNS1048',officeType:'Police Station',asset:'Printer',issue:'Not Working',officeName:'HINGOLI PS',address:'Hingoli District',district:'HINGOLI',status:'Closed'},
+                {date:t,uid:'MHCCTNS2023',officeType:'HIGHER OFFICE',asset:'UPS 2KVA 72 VDC',issue:'UPS Issue',officeName:'JALNA HO',address:'Jalna Head Office',district:'JALNA',status:'Open'},
+                {date:t,uid:'MHCCTNS1253',officeType:'PTS',asset:'Document Scanner',issue:'Not Working',officeName:'NANDED PS',address:'Nanded City PS',district:'NANDED',status:'Closed'},
+                {date:t,uid:'MHCCTNS1309',officeType:'Police Station',asset:'Printer',issue:'Not Working',officeName:'AMBAD PS',address:'Ambad Town',district:'JALNA',status:'Closed'},
+                {date:t,uid:'MHCCTNS1982',officeType:'Police Station',asset:'Printer',issue:'Not Working',officeName:'MUMBAI WEST PS',address:'Mumbai Western Suburb',district:'MUMBAI',status:'Open'},
+                {date:t,uid:'MHCCTNS1555',officeType:'Police Station',asset:'Hard Disk',issue:'Not Working',officeName:'PUNE CENTRAL',address:'Pune City Main',district:'PUNE',status:'Closed'},
+                {date:t,uid:'MHCCTNS1623',officeType:'HIGHER OFFICE',asset:'Desktop',issue:'Crash',officeName:'NAGPUR HO',address:'Nagpur HO Civil Lines',district:'NAGPUR',status:'Open'},
+                {date:t,uid:'MHCCTNS1741',officeType:'Police Station',asset:'Printer',issue:'Paper Jam',officeName:'LATUR PS',address:'Latur District',district:'LATUR',status:'Closed'},
+            ];
+            dashboardData = demoRawData.map(normalizeRow);
+            if(isInitialLoad) { initCharts(); isInitialLoad = false; }
+            updateDashboard();
+            await new Promise(r => setTimeout(r, 1500));
+        }
+
+        document.getElementById('loadingScreen').style.display='none';
+        document.getElementById('mainContent').classList.add('loaded');
+    }
+
+    document.getElementById('forceRefreshBtn').addEventListener('click', () => {
+        loadLiveExcelData(true); 
+    });
+
+    window.onload = () => loadLiveExcelData(false);
+</script>
+</body>
+</html>
