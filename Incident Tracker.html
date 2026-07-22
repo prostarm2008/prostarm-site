@@ -606,7 +606,7 @@
     async function loadLiveExcelData(forceRefresh = false){
         document.getElementById('loadingScreen').style.display='flex';
         document.getElementById('loadingText').innerText = "Fetching Incident Records...";
-        document.getElementById('loadingSubtext').innerText = "Connecting to Power Automate...";
+        document.getElementById('loadingSubtext').innerText = "Connecting to Database...";
 
         try {
             const powerAutomateUrl = "https://default000090a2d8654861ba6937e8e47451.72.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/23/workflows/f62a1680d3f44d4f921640b10b143d44/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=o45TBtlCyRGljObWW78N7NtmE9GG4zwOMJ4JxVuSqXQ"; 
